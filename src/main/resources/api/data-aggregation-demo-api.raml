@@ -1,0 +1,132 @@
+#%RAML 1.0
+title: Data Aggregation Demo API
+version: 1.0
+baseUri: http://localhost:8081/data-aggregation-api/experience/
+
+documentation: 
+  - title: Data Aggregation
+    content: This API demonstrates calling a number of external systems, doing a search in each, and amalgamating the results in a single response.
+
+types: 
+  Result: !include exchange_modules/69d7f319-0d94-4bcb-b6e9-d6d5e28b1545/data-aggregation-demo-data-types/1.0.1/Result.raml
+
+  ExternalSystem:
+    type: object
+    properties: 
+      name:
+        type: string
+        required: true
+        description: The [unique] name of the external system
+      url:
+        type: string
+        required: true
+        description: The URL of the System API for accessing this source
+
+  Site:
+    type: object
+    properties: 
+      name:
+        type: string
+        required: true
+      url:
+        type: string
+        required: true
+      id:
+        type: integer
+        required: false
+    additionalProperties: false
+  
+/admin:
+  description: This API is used for administration of the Data Aggregation API, which consists of the list of sites that are used as sources
+  /sources:
+    description: For working with lists of sources, or creating new sources
+    get:
+      description: Returns a full list of all sources in the database
+      responses: 
+        200:
+          body: 
+            application/json:
+              type: array
+              items: Site
+              example: |
+                [{"name": "Twitter", "url": "http:www.url.com/twitter-api/"}]
+    put:
+      description: For creating a new source
+      body: 
+        application/json:
+          type: Site
+      responses: 
+        200:
+          description: A copy of the `Site` object is returned if insertion is successful, including that site's newly created ID
+          body: 
+            application/json:
+              type: Site
+        400:
+          description: Returned if the source passed into the API is invalid, or the JSON passed is incorrectly formatted
+          body: 
+            application/json:
+              example: |
+                {"status": "Invalid format"}
+        500:
+          description: Returned if creation of the source fails for some reason (other than incorrect formatting if input data)
+          body: 
+            application/json:
+              example: |
+                {"status": "Error creating site"}
+    /{id}:
+      get:
+        responses: 
+          200:
+            body: 
+              application/json:
+                type: Site
+                example: |
+                  {"name": "Twitter", "url": "http://www.url.com/twitter-api", "id": 1}
+          404:
+            body: 
+              application/json:
+                example: |
+                  {"status": "Site not found"}
+      delete:
+        description: Used to remove a site from the database
+        body: 
+          application/json:
+            type: Site
+        responses: 
+          200:
+            body: 
+              application/json:
+                example: |
+                  {"status": "success"}
+          500:
+            body: 
+              application/json:
+                example: |
+                  {"status": "Deletion failed"}
+
+  /cleanDB:
+    get:
+      description: Very _dangerous_ API to use. Removes all `Sites` from the databse, and replaces them with a default list, maintained in the application's properties. Would never be created in real life -- or at least not simply implemented with a `GET`
+      responses: 
+        200:
+          body: 
+            application/json:
+              example: |
+                {"status": "success"}
+        500:
+          body: 
+            application/json:
+              example: |
+                {"status": "Operation failed"}
+
+/results:
+  /{searchTerm}:
+    description: Returns aggregated data from all data sources, based on this search term
+    get:
+      responses: 
+        200:
+          body: 
+            application/json:
+              type: Result
+              example: |
+                { "searchTerm": "search term", "simpleResults": [{"id": "1", "source": "twitter", "text": "search term"}] }

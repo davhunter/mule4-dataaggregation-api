@@ -1,0 +1,18 @@
+#%RAML 1.0 DataType
+
+type: object
+properties: 
+  searchTerm:
+    type: string
+    required: true
+    description: The original search term that was used to return this result
+  detailedResults:
+    type: array
+    items: !include DetailedResult.raml
+    required: false
+    description: A list of detailed results. Optional, because the requestor can request detailed or simplified results.
+  simpleResults:
+    type: array
+    items: !include SimpleResult.raml
+    required: false
+    description: A list of simplified results. Optional, because the requestor can request detailed or simplified results.
