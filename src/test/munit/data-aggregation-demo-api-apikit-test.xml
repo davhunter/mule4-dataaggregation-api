@@ -112,24 +112,6 @@
             <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_200_admin_cleandb_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
         </munit:validation>
     </munit:test>
-    <munit:test name="get:\admin\cleanDB:data-aggregation-demo-api-config-500-application\json-FlowTest" description="Verifying functionality of [get:\admin\cleanDB:data-aggregation-demo-api-config-500-application\json]" ignore="true">
-        <munit:enable-flow-sources>
-            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
-            <munit:enable-flow-source value="get:\admin\cleanDB:data-aggregation-demo-api-config" />
-        </munit:enable-flow-sources>
-        <munit:execution>
-            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/admin/cleanDB">
-                <http:headers>#[{"Accept":"application/json"}]</http:headers>
-                <http:response-validator>
-                    <http:success-status-code-validator values="500" />
-                </http:response-validator>
-            </http:request>
-        </munit:execution>
-        <munit:validation>
-            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(500)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 500" />
-            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_500_admin_cleandb_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
-        </munit:validation>
-    </munit:test>
     <munit:test name="get:\admin\sources:data-aggregation-demo-api-config-200-application\json-FlowTest" description="Verifying functionality of [get:\admin\sources:data-aggregation-demo-api-config-200-application\json]" ignore="true">
         <munit:enable-flow-sources>
             <munit:enable-flow-source value="data-aggregation-demo-api-main" />
