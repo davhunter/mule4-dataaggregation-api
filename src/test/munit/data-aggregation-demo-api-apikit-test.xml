@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd ">
+    <munit:config name="data-aggregation-demo-api-apikit-test.xml" />
+    <http:request-config name="HTTP_Request_Configuration" basePath="/api">
+        <http:request-connection host="localhost" port="8081" />
+    </http:request-config>
+    <munit:test name="put:\admin\sources:application\json:data-aggregation-demo-api-config-200-application\json-FlowTest" description="Verifying functionality of [put:\admin\sources:application\json:data-aggregation-demo-api-config-200-application\json]" ignore="true">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
+            <munit:enable-flow-source value="put:\admin\sources:application\json:data-aggregation-demo-api-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/put_admin_sources_application_json.json')]" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="PUT" path="/admin/sources">
+                <http:headers>#[{"Accept":"application/json","Content-Type":"application/json"}]</http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/put_200_admin_sources_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="put:\admin\sources:application\json:data-aggregation-demo-api-config-400-application\json-FlowTest" description="Verifying functionality of [put:\admin\sources:application\json:data-aggregation-demo-api-config-400-application\json]" ignore="true">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
+            <munit:enable-flow-source value="put:\admin\sources:application\json:data-aggregation-demo-api-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/put_admin_sources_application_json.json')]" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="PUT" path="/admin/sources">
+                <http:headers>#[{"Accept":"application/json","Content-Type":"application/json"}]</http:headers>
+                <http:response-validator>
+                    <http:success-status-code-validator values="400" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(400)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 400" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/put_400_admin_sources_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="put:\admin\sources:application\json:data-aggregation-demo-api-config-500-application\json-FlowTest" description="Verifying functionality of [put:\admin\sources:application\json:data-aggregation-demo-api-config-500-application\json]" ignore="true">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
+            <munit:enable-flow-source value="put:\admin\sources:application\json:data-aggregation-demo-api-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/put_admin_sources_application_json.json')]" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="PUT" path="/admin/sources">
+                <http:headers>#[{"Accept":"application/json","Content-Type":"application/json"}]</http:headers>
+                <http:response-validator>
+                    <http:success-status-code-validator values="500" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(500)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 500" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/put_500_admin_sources_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="delete:\admin\sources\(id):application\json:data-aggregation-demo-api-config-200-application\json-FlowTest" description="Verifying functionality of [delete:\admin\sources\(id):application\json:data-aggregation-demo-api-config-200-application\json]" ignore="true">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
+            <munit:enable-flow-source value="delete:\admin\sources\(id):application\json:data-aggregation-demo-api-config" />
+        </munit:enable-flow-sources>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="DELETE" path="/admin/sources/{id}">
+                <http:headers>#[{"Accept":"application/json"}]</http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/delete_200_admin_sources_{id}_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="delete:\admin\sources\(id):application\json:data-aggregation-demo-api-config-500-application\json-FlowTest" description="Verifying functionality of [delete:\admin\sources\(id):application\json:data-aggregation-demo-api-config-500-application\json]" ignore="true">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
+            <munit:enable-flow-source value="delete:\admin\sources\(id):application\json:data-aggregation-demo-api-config" />
+        </munit:enable-flow-sources>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="DELETE" path="/admin/sources/{id}">
+                <http:headers>#[{"Accept":"application/json"}]</http:headers>
+                <http:response-validator>
+                    <http:success-status-code-validator values="500" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(500)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 500" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/delete_500_admin_sources_{id}_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\admin\cleanDB:data-aggregation-demo-api-config-200-application\json-FlowTest" description="Verifying functionality of [get:\admin\cleanDB:data-aggregation-demo-api-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
+            <munit:enable-flow-source value="get:\admin\cleanDB:data-aggregation-demo-api-config" />
+        </munit:enable-flow-sources>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/admin/cleanDB">
+                <http:headers>#[{"Accept":"application/json"}]</http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_200_admin_cleandb_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\admin\cleanDB:data-aggregation-demo-api-config-500-application\json-FlowTest" description="Verifying functionality of [get:\admin\cleanDB:data-aggregation-demo-api-config-500-application\json]" ignore="true">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
+            <munit:enable-flow-source value="get:\admin\cleanDB:data-aggregation-demo-api-config" />
+        </munit:enable-flow-sources>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/admin/cleanDB">
+                <http:headers>#[{"Accept":"application/json"}]</http:headers>
+                <http:response-validator>
+                    <http:success-status-code-validator values="500" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(500)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 500" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_500_admin_cleandb_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\admin\sources:data-aggregation-demo-api-config-200-application\json-FlowTest" description="Verifying functionality of [get:\admin\sources:data-aggregation-demo-api-config-200-application\json]" ignore="true">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
+            <munit:enable-flow-source value="get:\admin\sources:data-aggregation-demo-api-config" />
+        </munit:enable-flow-sources>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/admin/sources">
+                <http:headers>#[{"Accept":"application/json"}]</http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_200_admin_sources_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\admin\sources\(id):data-aggregation-demo-api-config-200-application\json-FlowTest" description="Verifying functionality of [get:\admin\sources\(id):data-aggregation-demo-api-config-200-application\json]" ignore="true">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
+            <munit:enable-flow-source value="get:\admin\sources\(id):data-aggregation-demo-api-config" />
+        </munit:enable-flow-sources>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/admin/sources/1">
+                <http:headers><![CDATA[#[output applicaton/java
+---
+{
+	"Accept" : "application/json"
+}]]]></http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_200_admin_sources_{id}_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\admin\sources\(id):data-aggregation-demo-api-config-404-application\json-FlowTest" description="Verifying functionality of [get:\admin\sources\(id):data-aggregation-demo-api-config-404-application\json]" ignore="true">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
+            <munit:enable-flow-source value="get:\admin\sources\(id):data-aggregation-demo-api-config" />
+        </munit:enable-flow-sources>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/admin/sources/1">
+                <http:headers><![CDATA[#[output applicaton/java
+---
+{
+	"Accept" : "application/json"
+}]]]></http:headers>
+                <http:response-validator>
+                    <http:success-status-code-validator values="404" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(404)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 404" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_404_admin_sources_{id}_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\results\(searchTerm):data-aggregation-demo-api-config-200-application\json-FlowTest" description="Verifying functionality of [get:\results\(searchTerm):data-aggregation-demo-api-config-200-application\json]" ignore="true">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
+            <munit:enable-flow-source value="get:\results\(searchTerm):data-aggregation-demo-api-config" />
+        </munit:enable-flow-sources>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/results/searchTerm">
+                <http:headers><![CDATA[#[output applicaton/java
+---
+{
+	"Accept" : "application/json"
+}]]]></http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_200_results_{searchterm}_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+</mule>

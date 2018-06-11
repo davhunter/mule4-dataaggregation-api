@@ -1,0 +1,10 @@
+{
+  "searchTerm": "search term",
+  "simpleResults": [
+    {
+      "id": "1",
+      "source": "twitter",
+      "text": "search term"
+    }
+  ]
+}
