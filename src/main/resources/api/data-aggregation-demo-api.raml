@@ -1,0 +1,141 @@
+#%RAML 1.0
+title: Data Aggregation Demo API
+version: 1.0
+baseUri: http://localhost:8081/da-api/
+
+documentation: 
+  - title: Data Aggregation
+    content: This API demonstrates calling a number of external systems, doing a search in each, and amalgamating the results in a single response.
+  - title: Admin
+    content: The Admin API is used for setting up the Sites used by the main API. The Sites are simply a list of URLs by which the search should be performed; all URLs must include a final component for a URL parameter for the search term. For example, if a Site in the Admin API's DB has the URL `http://www.somesite.com` stored for it, then searches will be performed using `GET http://www.somesite.com/searchTerm` from the Data Aggregation API.
+
+types: 
+  Result: !include exchange_modules/69d7f319-0d94-4bcb-b6e9-d6d5e28b1545/data-aggregation-demo-data-types/1.0.1/Result.raml
+
+  Site:
+    type: object
+    properties: 
+      name:
+        description: Friendly name of the site
+        type: string
+        required: true
+      url:
+        description: URL for the site. It is assumed that the site includes a final `/searchTerm` component at the end, used for searching. For example, if the URL `http://www.somesite.com` is passed, then searches will be performed using `GET http://www.somesite.com/searchTerm` by APIs calling this one.
+        type: string
+        required: true
+      id:
+        description: The unique ID for this Site, used internally by the **Data Aggregation** API. 
+        type: integer
+        required: false
+    additionalProperties: false
+  
+/admin:
+  description: This API is used for administration of the Data Aggregation API, which consists of the list of sites that are used as sources
+  /sources:
+    description: For working with lists of sources, or creating new sources
+    get:
+      description: Returns a full list of all sources in the database. No query params; not expecting this to ever be a long list.
+      responses: 
+        200:
+          body: 
+            application/json:
+              type: array
+              items: Site
+              example: |
+                [{"name": "Twitter", "url": "http:www.url.com/twitter-api/"}]
+    put:
+      description: For creating a new source
+      body: 
+        application/json:
+          type: Site
+          example: |
+            { "name": "Site Name", "url": "http://www.somesite.com" }
+      responses: 
+        200:
+          description: A copy of the `Site` object is returned if insertion is successful, including that site's newly created ID
+          body: 
+            application/json:
+              type: Site
+              example: |
+                { "name": "Site Name", "url": "http://www.somesite.com", "id": 1 }
+        400:
+          description: Returned if the source passed into the API is invalid, or the JSON passed is incorrectly formatted
+          body: 
+            application/json:
+              example: |
+                {"status": "Invalid format"}
+        500:
+          description: Returned if creation of the source fails for some reason (other than incorrect formatting if input data)
+          body: 
+            application/json:
+              example: |
+                {"status": "Error creating site"}
+    /{id}:
+      description: Used for working with a particular Site from the API, based on `ID`
+      get:
+        description: Returns a particular Site
+        responses: 
+          200:
+            body: 
+              application/json:
+                type: Site
+                example: |
+                  {"name": "Twitter", "url": "http://www.url.com/twitter-api", "id": 1}
+          404:
+            body: 
+              application/json:
+                example: |
+                  {"status": "Site not found"}
+      delete:
+        description: Used to remove a site from the database
+        body: 
+          application/json:
+            type: Site
+            example: |
+              { "name": "Some Site", "url": "http://www.somesite.com", "id": 1 }
+        responses: 
+          200:
+            body: 
+              application/json:
+                example: |
+                  {"status": "success"}
+          500:
+            body: 
+              application/json:
+                example: |
+                  {"status": "Deletion failed"}
+
+  /cleanDB:
+    description: For setting up the environment (for demo purposes)
+    get:
+      description: Very *dangerous* API to use. Removes all `Sites` from the databse, and replaces them with a default list, maintained in the application's properties. Would never be created in real life -- or at least not simply implemented with a `GET`
+      responses: 
+        200:
+          body: 
+            application/json:
+              example: |
+                {"status": "success"}
+        500:
+          body: 
+            application/json:
+              example: |
+                {"status": "Operation failed"}
+
+/results:
+  description: The main API, for retrieving aggregated results from multiple source systems.
+  /{searchTerm}:
+    description: Returns aggregated data from all data sources, based on this search term
+    get:
+      queryParameters: 
+        detailedResponse:
+          description: Indicates whether detailed responses should be returned. (Defaults to `true`, meaning that they should be returned.)
+          type: boolean
+          required: false
+          default: true
+      responses: 
+        200:
+          body: 
+            application/json:
+              type: Result
+              example: |
+                { "searchTerm": "search term", "simpleResults": [{"id": "1", "source": "twitter", "text": "search term"}] }

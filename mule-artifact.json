@@ -1,0 +1,27 @@
+{
+  "configs": [
+    "data-aggregation-demo-api.xml"
+  ],
+  "secureProperties": [],
+  "redeploymentEnabled": true,
+  "name": "mule4-dataaggregation-api",
+  "minMuleVersion": "4.1.2",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "api/.gitignore",
+        "api/data-aggregation-demo-api.raml",
+        "api/exchange_modules/69d7f319-0d94-4bcb-b6e9-d6d5e28b1545/data-aggregation-demo-data-types/1.0.1/DetailedResult.raml",
+        "api/exchange_modules/69d7f319-0d94-4bcb-b6e9-d6d5e28b1545/data-aggregation-demo-data-types/1.0.1/Result.raml",
+        "api/exchange_modules/69d7f319-0d94-4bcb-b6e9-d6d5e28b1545/data-aggregation-demo-data-types/1.0.1/SimpleResult.raml"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}

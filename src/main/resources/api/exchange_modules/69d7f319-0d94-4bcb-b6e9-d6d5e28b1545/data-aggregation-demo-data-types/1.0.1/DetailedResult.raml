@@ -1,0 +1,46 @@
+#%RAML 1.0 DataType
+
+type: object
+properties: 
+  id:
+    type: string
+    required: true
+    description: Unique ID for the item, as defined by the external system
+  source:
+    type: string
+    required: true
+    description: The external source of this data
+  text:
+    type: string
+    required: true
+    description: The text for this item, returned by the external system
+  title:
+    type: string
+    required: false
+    description: The title for the item, as returned by the external system, if the system supports the concept of a "title"
+  url:
+    type: string
+    required: false
+    description: The URL of the specific item from the external system, if there is a URL to a specific item
+  user:
+    type: string
+    required: false
+    description: The user name of the user who posted the item in the external system, if the system supports such an attribute
+  datePublished:
+    type: datetime
+    required: true
+    description: The date/time the item was posted in the external system. **Assumes that any external system can support this attribute.**
+  categories:
+    type: array
+    items: string
+    required: false
+    description: A list of **Categories** that are applied to this information in the external system, if the system supports such information
+  department:
+    type: string
+    required: false
+    description: The department defined by the external system; not typically used
+  hashtags:
+    type: array
+    items: string
+    required: false
+    description: A list of hashtags applied to this information in the external system, if available

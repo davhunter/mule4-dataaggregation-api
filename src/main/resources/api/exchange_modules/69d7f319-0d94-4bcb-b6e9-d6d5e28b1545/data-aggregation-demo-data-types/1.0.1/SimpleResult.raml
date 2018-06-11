@@ -1,0 +1,21 @@
+#%RAML 1.0 DataType
+
+type: object
+properties: 
+  id:
+    type: string
+    required: true
+    description: Unique ID for the item, as defined in the external system
+  source:
+    type: string
+    required: true
+    description: The external source of this data
+  text:
+    type: string
+    required: true
+    description: The actual text of the item, from the external system
+  categories:
+    type: array
+    items: string
+    required: false
+    description: A list of **categories** applied to the item in the external system, if the system supports such categories
