@@ -1,10 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd ">
-    <http:listener-config name="data-aggregation-demo-api-httpListenerConfig">
-        <http:listener-connection host="0.0.0.0" port="8081" />
-    </http:listener-config>
-    <apikit:config name="data-aggregation-demo-api-config" raml="data-aggregation-demo-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
-    <flow name="data-aggregation-demo-api-main">
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" 
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:spring="http://www.mulesoft.org/schema/mule/spring" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+
+	<http:listener-config name="data-aggregation-demo-api-httpListenerConfig">
+		<http:listener-connection host="${http.host}"
+			port="${http.port}" />
+	</http:listener-config>
+
+	<apikit:config name="data-aggregation-demo-api-config"
+		raml="data-aggregation-demo-api.raml" outboundHeadersMapName="outboundHeaders"
+		httpStatusVarName="httpStatus" />
+
+	<configuration-properties doc:name="Configuration properties"
+		doc:id="98d287ab-afb0-4499-9479-17de2115ce83" file="app-properties.yaml" />
+
+	<db:config name="derbyConfig" doc:name="Database Config"
+		doc:id="2eb4ccc0-07bf-4a0d-ae04-6a785ce4de56">
+		<db:generic-connection url="jdbc:derby:memory:sourceDB;create=true" driverClassName="org.apache.derby.jdbc.EmbeddedDriver" />
+	</db:config>
+	
+	<spring:config name="springConfig" doc:name="Spring Config" doc:id="ce8af09a-d4d4-4d7e-a8a4-5787760e2be8" files="beans.xml" />
+	
+	<flow name="data-aggregation-demo-api-main">
         <http:listener config-ref="data-aggregation-demo-api-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers>#[vars.outboundHeaders default {}]</http:headers>
@@ -30,6 +56,19 @@ output application/json
                 </ee:transform>
             </on-error-propagate>
             <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APP:NO_SOURCE_FOUND">
                 <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
@@ -155,7 +194,32 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="get:\admin\cleanDB:data-aggregation-demo-api-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <db:delete doc:name="Empty Table" doc:id="1900f23e-315a-42e0-8e71-7252af358130" config-ref="derbyConfig">
+			<db:sql >DELETE FROM sources</db:sql>
+		</db:delete>
+		<ee:transform doc:name="Create Default Data" doc:id="6ebddf9c-bcad-470d-a03e-72838665f487" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[
+	{
+		id: 1,
+		name: "Healthy Canada",
+		url: "http://mule4-hc-api.ca-c1.cloudhub.io/hc/recalls/"
+	},
+	{
+		id: 2,
+		name: "NYT API",
+		url: "http://mule4-nyt-api.ca-c1.cloudhub.io/nyt/articles/"
+	}
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:bulk-insert doc:name="Insert Default Data" doc:id="0b586845-e9d8-406a-a8db-db4b0060cc0c" config-ref="derbyConfig">
+			<db:sql >INSERT INTO sources (id, name, url) VALUES (:id, :name, :url)</db:sql>
+		</db:bulk-insert>
+		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="b0c9b142-bb3a-4bee-8105-683e1d159ae2">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -167,35 +231,47 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="get:\admin\sources:data-aggregation-demo-api-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <db:select doc:name="Get Sources" doc:id="02f5d9f2-f3a3-4e29-90fe-fb04ff41dea7" config-ref="derbyConfig">
+			<db:sql >SELECT * FROM sources</db:sql>
+		</db:select>
+		<validation:is-not-empty-collection doc:name="Validate that a Record Exists" doc:id="4dfade93-ec46-46aa-bc99-90fd6ab708b4" >
+			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:NO_SOURCE_FOUND" />
+		</validation:is-not-empty-collection>
+		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="2afc7867-737b-4679-9312-0f8ee7978150">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
-[
-  {
-    name: "Twitter",
-    url: "http:www.url.com/twitter-api/"
-  }
-]]]></ee:set-payload>
+payload map ( result , indexOfResult) -> {
+	id: result.ID,
+	name: result.NAME,
+	url: result.URL
+}]]></ee:set-payload>
             </ee:message>
         </ee:transform>
     </flow>
     <flow name="get:\admin\sources\(id):data-aggregation-demo-api-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="ed803643-ebc2-4e55-9dd1-adc1a23e90f7">
             <ee:variables>
-                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+                <ee:set-variable variableName="id"><![CDATA[attributes.uriParams.id]]></ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+		<db:select doc:name="Get Selected Source from DB" doc:id="a6f414a5-1d31-43cb-9446-9d15b8d49b81" config-ref="derbyConfig">
+			<db:sql >SELECT id, name, url FROM sources WHERE id = :id</db:sql>
+			<db:input-parameters ><![CDATA[#[{'id': vars.id}]]]></db:input-parameters>
+		</db:select>
+		<validation:is-not-empty-collection doc:name="Validate that a Record Exists" doc:id="37039915-d399-414c-a9b5-cdbdbc39f651" >
+			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:NO_SOURCE_FOUND" />
+		</validation:is-not-empty-collection>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="d27dfcd4-fb32-4e79-bd04-cbc23ae12ef5">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-  name: "Twitter",
-  url: "http://www.url.com/twitter-api",
-  id: 1
+  name: payload[0].name,
+  url: payload[0].url,
+  id: payload[0].id
 }]]></ee:set-payload>
             </ee:message>
         </ee:transform>
