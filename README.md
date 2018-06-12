@@ -20,3 +20,9 @@ This means that using Spring objects/concepts has changed to a multi-step proces
 1. Import the desired version of Spring in the POM, both in the `dependencies` section as well as in the `build / plugins / plugin / mule-maven-plugin / configuration / sharedLibraries` section.
 1. Create a Spring XML file
 1. Create a global Spring Config, pointing to that XML file
+
+### APIviz
+
+Because there are some Java classes here, the **APIviz** library is used to generate nicer JavaDoc documentation. This means that **Graphviz** must also be installed on the machine where JavaDoc is generated.
+
+The JavaDoc generation is not happening at build time, so the build machine doesn't *necessarily* need to have Graphviz installed.
