@@ -19,6 +19,7 @@
 		<munit.version>2.1.2</munit.version>
 		<spring.version>4.1.9.RELEASE</spring.version>
 		<springsecurity.version>4.0.4.RELEASE</springsecurity.version>
+		<jackson.version>2.9.6</jackson.version>
 	</properties>
 
 	<build>
@@ -49,6 +50,10 @@
 						<sharedLibrary>
 							<groupId>org.springframework</groupId>
 							<artifactId>spring-beans</artifactId>
+						</sharedLibrary>
+						<sharedLibrary>
+							<groupId>org.mule.module</groupId>
+							<artifactId>mule-java-module</artifactId>
 						</sharedLibrary>
 					</sharedLibraries>
 				</configuration>
@@ -173,6 +178,22 @@
 			<artifactId>mule-validation-module</artifactId>
 			<version>1.2.1</version>
 			<classifier>mule-plugin</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.mule.module</groupId>
+			<artifactId>mule-java-module</artifactId>
+			<version>1.1.1</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
 		</dependency>
 	</dependencies>
 

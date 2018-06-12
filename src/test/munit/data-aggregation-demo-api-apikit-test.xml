@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd ">
+<mule xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd 
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+
     <munit:config name="data-aggregation-demo-api-apikit-test.xml" />
-    <http:request-config name="HTTP_Request_Configuration" basePath="/api">
+    
+    <http:request-config name="HTTP_Request_Configuration" basePath="/da-api">
         <http:request-connection host="localhost" port="${http.port}" />
     </http:request-config>
-    <munit:test name="put:\admin\sources:application\json:data-aggregation-demo-api-config-200-application\json-FlowTest" description="Verifying functionality of [put:\admin\sources:application\json:data-aggregation-demo-api-config-200-application\json]" ignore="true">
+    
+	<java:config name="Java_Config" doc:name="Java Config" doc:id="61409e1f-1d59-4b3d-94ce-4dec68fcb41b" />
+	<munit:test name="put:\admin\sources:application\json:data-aggregation-demo-api-config-200-application\json-FlowTest" description="Verifying functionality of [put:\admin\sources:application\json:data-aggregation-demo-api-config-200-application\json]" ignore="true">
         <munit:enable-flow-sources>
             <munit:enable-flow-source value="data-aggregation-demo-api-main" />
             <munit:enable-flow-source value="put:\admin\sources:application\json:data-aggregation-demo-api-config" />
@@ -97,7 +102,7 @@
             <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/delete_500_admin_sources_{id}_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
         </munit:validation>
     </munit:test>
-    <munit:test name="get:\admin\cleanDB:data-aggregation-demo-api-config-200-application\json-FlowTest" description="Verifying functionality of [get:\admin\cleanDB:data-aggregation-demo-api-config-200-application\json]">
+    <munit:test name="test-cleanDB-API" description="Verifying functionality of the cleanDB API">
         <munit:enable-flow-sources>
             <munit:enable-flow-source value="data-aggregation-demo-api-main" />
             <munit:enable-flow-source value="get:\admin\cleanDB:data-aggregation-demo-api-config" />
@@ -112,26 +117,111 @@
             <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_200_admin_cleandb_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
         </munit:validation>
     </munit:test>
-    <munit:test name="get:\admin\sources:data-aggregation-demo-api-config-200-application\json-FlowTest" description="Verifying functionality of [get:\admin\sources:data-aggregation-demo-api-config-200-application\json]" ignore="true">
+    
+    <munit:test name="test-sources-API-multiple" description="Verifying functionality of /admin/sources with multiple results">
         <munit:enable-flow-sources>
             <munit:enable-flow-source value="data-aggregation-demo-api-main" />
             <munit:enable-flow-source value="get:\admin\sources:data-aggregation-demo-api-config" />
         </munit:enable-flow-sources>
-        <munit:execution>
+        <munit:behavior >
+			<java:new doc:name="Create Helper Class" doc:id="0ff43f0f-d33e-4acb-8084-e30773d24020" class="com.deloitte.helperclasses.JsonHelpers" constructor="JsonHelpers()" target="helperClass"/>
+			<munit-tools:mock-when doc:name="Mock Database Call" doc:id="4846a34f-c050-4650-b34c-16f658c17f30" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:name" whereValue="Get Sources" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[Java::invoke('com.deloitte.helperclasses.JsonHelpers', 'getArrayFromJson(String)', vars.helperClass, {arg0: MunitTools::getResourceAsString('scaffolder/mock/get-multiple-sources.json')})]" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
             <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/admin/sources">
                 <http:headers>#[{"Accept":"application/json"}]</http:headers>
             </http:request>
         </munit:execution>
         <munit:validation>
             <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
-            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_200_admin_sources_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_200_admin_sources_multiple.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
         </munit:validation>
     </munit:test>
-    <munit:test name="get:\admin\sources\(id):data-aggregation-demo-api-config-200-application\json-FlowTest" description="Verifying functionality of [get:\admin\sources\(id):data-aggregation-demo-api-config-200-application\json]" ignore="true">
+    
+    <munit:test name="test-sources-API-single" description="Verifying functionality of /admin/sources with a single result">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
+            <munit:enable-flow-source value="get:\admin\sources:data-aggregation-demo-api-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior >
+			<java:new doc:name="Create Helper Class" class="com.deloitte.helperclasses.JsonHelpers" constructor="JsonHelpers()" target="helperClass"/>
+			<munit-tools:mock-when doc:name="Mock Database Call" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:name" whereValue="Get Sources" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[Java::invoke('com.deloitte.helperclasses.JsonHelpers', 'getArrayFromJson(String)', vars.helperClass, {arg0: MunitTools::getResourceAsString('scaffolder/mock/get-single-source.json')})]" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/admin/sources">
+                <http:headers>#[{"Accept":"application/json"}]</http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_200_admin_source_single.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    
+    <munit:test name="test-sources-API-none" description="Verifying functionality of /admin/sources with no results">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
+            <munit:enable-flow-source value="get:\admin\sources:data-aggregation-demo-api-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior >
+			<java:new doc:name="Create Helper Class" class="com.deloitte.helperclasses.JsonHelpers" constructor="JsonHelpers()" target="helperClass"/>
+			<munit-tools:mock-when doc:name="Mock Database Call" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:name" whereValue="Get Sources" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[Java::invoke('com.deloitte.helperclasses.JsonHelpers', 'getArrayFromJson(String)', vars.helperClass, {arg0: MunitTools::getResourceAsString('scaffolder/mock/get-no-sources.json')})]" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/admin/sources">
+                <http:headers><![CDATA[#[output applicaton/java
+---
+{
+	"Accept" : "application/json"
+}]]]></http:headers>
+				<http:response-validator >
+					<http:success-status-code-validator values="200,404" />
+				</http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(404)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 404" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_404_admin_sources.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    
+    <munit:test name="test-source-id-200" description="Verifying functionality of /admin/sources/ID for happy path">
         <munit:enable-flow-sources>
             <munit:enable-flow-source value="data-aggregation-demo-api-main" />
             <munit:enable-flow-source value="get:\admin\sources\(id):data-aggregation-demo-api-config" />
         </munit:enable-flow-sources>
+        <munit:behavior >
+			<java:new doc:name="Create Helper Class" class="com.deloitte.helperclasses.JsonHelpers" constructor="JsonHelpers()" target="helperClass"/>
+			<munit-tools:mock-when doc:name="Mock Database Call" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:name" whereValue="Get Selected Source from DB" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[Java::invoke('com.deloitte.helperclasses.JsonHelpers', 'getArrayFromJson(String)', vars.helperClass, {arg0: MunitTools::getResourceAsString('scaffolder/mock/get-single-source-by-id.json')})]" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
         <munit:execution>
             <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/admin/sources/1">
                 <http:headers><![CDATA[#[output applicaton/java
@@ -143,14 +233,26 @@
         </munit:execution>
         <munit:validation>
             <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
-            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_200_admin_sources_{id}_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_200_admin_source_{ID}.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
         </munit:validation>
     </munit:test>
-    <munit:test name="get:\admin\sources\(id):data-aggregation-demo-api-config-404-application\json-FlowTest" description="Verifying functionality of [get:\admin\sources\(id):data-aggregation-demo-api-config-404-application\json]" ignore="true">
+    
+    <munit:test name="test-source-id-404" description="Verifying functionality of /admin/sources/ID with no results returned">
         <munit:enable-flow-sources>
             <munit:enable-flow-source value="data-aggregation-demo-api-main" />
             <munit:enable-flow-source value="get:\admin\sources\(id):data-aggregation-demo-api-config" />
         </munit:enable-flow-sources>
+        <munit:behavior >
+			<java:new doc:name="Create Helper Class" class="com.deloitte.helperclasses.JsonHelpers" constructor="JsonHelpers()" target="helperClass"/>
+			<munit-tools:mock-when doc:name="Mock Database Call" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:name" whereValue="Get Selected Source from DB" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[Java::invoke('com.deloitte.helperclasses.JsonHelpers', 'getArrayFromJson(String)', vars.helperClass, {arg0: MunitTools::getResourceAsString('scaffolder/mock/get-no-sources.json')})]" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
         <munit:execution>
             <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/admin/sources/1">
                 <http:headers><![CDATA[#[output applicaton/java
@@ -159,13 +261,13 @@
 	"Accept" : "application/json"
 }]]]></http:headers>
                 <http:response-validator>
-                    <http:success-status-code-validator values="404" />
+                    <http:success-status-code-validator values="200,404" />
                 </http:response-validator>
             </http:request>
         </munit:execution>
         <munit:validation>
             <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(404)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 404" />
-            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_404_admin_sources_{id}_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_404_admin_sources.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
         </munit:validation>
     </munit:test>
     <munit:test name="get:\results\(searchTerm):data-aggregation-demo-api-config-200-application\json-FlowTest" description="Verifying functionality of [get:\results\(searchTerm):data-aggregation-demo-api-config-200-application\json]" ignore="true">

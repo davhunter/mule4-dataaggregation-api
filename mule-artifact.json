@@ -11,7 +11,8 @@
     "id": "mule",
     "attributes": {
       "exportedPackages": [
-      	"com.deloitte.daapi.beans"
+      	"com.deloitte.daapi.beans",
+      	"com.deloitte.helperclasses"
       ],
       "exportedResources": [
         "api/data-aggregation-demo-api.raml",
