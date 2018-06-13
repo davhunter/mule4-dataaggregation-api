@@ -41,7 +41,7 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
         <apikit:router config-ref="data-aggregation-demo-api-config" />
         <error-handler>
             <on-error-propagate type="APIKIT:BAD_REQUEST">
-                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="ff26a2f8-cfbf-4f72-83b9-084fc9e76e6b">
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -49,7 +49,46 @@ output application/json
 {message: "Bad request"}]]></ee:set-payload>
                     </ee:message>
                     <ee:variables>
-                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APP:IDS_DONT_MATCH">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="df7b806e-9903-4a6a-8678-4f4ddcdc9118">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{status: "Invalid format: IDs don't match"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APP:SOURCE_DATA_MISMATCH">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="df7b806e-9903-4a6a-8678-4f4ddcdc9118">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{status: "Invalid format: Invalid data passed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APP:NO_SOURCE_TO_DELETE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="df7b806e-9903-4a6a-8678-4f4ddcdc9118">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{status: "Invalid format: Source doesn't exist"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
                     </ee:variables>
                 </ee:transform>
             </on-error-propagate>
@@ -133,6 +172,7 @@ output application/json
             </on-error-propagate>
         </error-handler>
     </flow>
+    
     <flow name="data-aggregation-demo-api-console">
         <http:listener config-ref="data-aggregation-demo-api-httpListenerConfig" path="/console/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -160,6 +200,7 @@ output application/json
             </on-error-propagate>
         </error-handler>
     </flow>
+    
     <flow name="put:\admin\sources:application\json:data-aggregation-demo-api-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
@@ -174,13 +215,34 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
+    
     <flow name="delete:\admin\sources\(id):application\json:data-aggregation-demo-api-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+        <logger level="INFO" doc:name="DEBUG Logger" doc:id="f3187b1a-392b-456f-9a44-21c98102c6bf" message="Initial Payload: #[payload]"/>
+		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="bd94cff8-c591-447a-915d-2b83b1c40754" doc:name="Capture Incoming Data">
             <ee:variables>
-                <ee:set-variable variableName="id">attributes.uriParams.id</ee:set-variable>
+                <ee:set-variable variableName="id"><![CDATA[attributes.uriParams.id]]></ee:set-variable>
+				<ee:set-variable variableName="incomingSource" ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <validation:is-true doc:name="Validate ID against Payload ID" doc:id="b9736852-dd84-4d0b-929d-83150c27e1a1" expression="#[vars.incomingSource.id as Number == vars.id as Number]" message="ID in payload and ID in URL don't match">
+			<error-mapping sourceType="VALIDATION:INVALID_BOOLEAN" targetType="APP:IDS_DONT_MATCH" />
+		</validation:is-true>
+		<flow-ref doc:name="get-source-fromdb-by-id" doc:id="a833003b-4271-4ea2-b6ec-c6ef71f663cc" name="get-source-fromdb-by-id"/>
+        <logger level="INFO" doc:name="DEBUG Logger" message="Payload after db select: #[payload]"/>
+		<validation:is-not-empty-collection doc:name="Validate Existing Source Exists" doc:id="b911894b-b521-494c-8156-d21303aee3dd" message="Source doesn't exist">
+			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:NO_SOURCE_TO_DELETE" />
+		</validation:is-not-empty-collection>
+		<validation:is-true doc:name="Validate Payload Data Against Data in DB" doc:id="132789b7-9fe0-4bd6-99ee-7e3579839415" expression="#[vars.incomingSource.id as Number == payload[0].id as Number and vars.incomingSource.name as String == payload[0].name as String and vars.incomingSource.url as String == payload[0].url as String]" message="Incoming data and database don't match">
+			<error-mapping sourceType="VALIDATION:INVALID_BOOLEAN" targetType="APP:SOURCE_DATA_MISMATCH" />
+		</validation:is-true>
+		<db:delete doc:name="Delete Source" doc:id="8e98af40-5e60-441a-a73d-b75c2812e799" config-ref="derbyConfig">
+			<db:sql >DELETE FROM sources WHERE id = :id</db:sql>
+			<db:input-parameters ><![CDATA[#[{'id': vars.id}]]]></db:input-parameters>
+		</db:delete>
+		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="38da2b99-c604-445e-88b6-3a0bf4af4b75">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -191,6 +253,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
+    
     <flow name="get:\admin\cleanDB:data-aggregation-demo-api-config">
         <db:delete doc:name="Empty Table" doc:id="1900f23e-315a-42e0-8e71-7252af358130" config-ref="derbyConfig">
 			<db:sql >DELETE FROM sources</db:sql>
@@ -228,6 +291,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
+    
     <flow name="get:\admin\sources:data-aggregation-demo-api-config">
         <db:select doc:name="Get Sources" doc:id="02f5d9f2-f3a3-4e29-90fe-fb04ff41dea7" config-ref="derbyConfig">
 			<db:sql >SELECT id, name, url FROM sources</db:sql>
@@ -248,16 +312,14 @@ payload map ( result , indexOfResult) -> {
             </ee:message>
         </ee:transform>
     </flow>
+    
     <flow name="get:\admin\sources\(id):data-aggregation-demo-api-config">
 		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="ed803643-ebc2-4e55-9dd1-adc1a23e90f7">
             <ee:variables>
                 <ee:set-variable variableName="id"><![CDATA[attributes.uriParams.id]]></ee:set-variable>
             </ee:variables>
         </ee:transform>
-		<db:select doc:name="Get Selected Source from DB" doc:id="a6f414a5-1d31-43cb-9446-9d15b8d49b81" config-ref="derbyConfig">
-			<db:sql >SELECT id, name, url FROM sources WHERE id = :id</db:sql>
-			<db:input-parameters ><![CDATA[#[{'id': vars.id}]]]></db:input-parameters>
-		</db:select>
+		<flow-ref doc:name="get-source-fromdb-by-id" doc:id="828e5c19-17c1-4aa8-92b7-95f121df9c15" name="get-source-fromdb-by-id" />
 		<validation:is-not-empty-collection doc:name="Validate that a Record Exists" doc:id="37039915-d399-414c-a9b5-cdbdbc39f651" >
 			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:NO_SOURCE_FOUND" />
 		</validation:is-not-empty-collection>
@@ -274,13 +336,22 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="get:\results\(searchTerm):data-aggregation-demo-api-config">
+    
+	<sub-flow name="get-source-fromdb-by-id" doc:id="72782d8e-8690-433f-a18a-e3adee5da4bc" >
+		<db:select doc:name="Get Selected Source from DB" doc:id="a6f414a5-1d31-43cb-9446-9d15b8d49b81" config-ref="derbyConfig">
+			<db:sql>SELECT id, name, url FROM sources WHERE id = :id</db:sql>
+			<db:input-parameters><![CDATA[#[{'id': vars.id}]]]></db:input-parameters>
+		</db:select>
+	</sub-flow>
+	
+	<flow name="get:\results\(searchTerm):data-aggregation-demo-api-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
             <ee:variables>
                 <ee:set-variable variableName="searchTerm">attributes.uriParams.searchTerm</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json

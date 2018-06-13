@@ -43,6 +43,11 @@ types:
               items: Site
               example: |
                 [{"name": "Twitter", "url": "http:www.url.com/twitter-api/"}]
+        404:
+          body: 
+            application/json:
+              example: |
+                { "status": "No matching source found" }
     put:
       description: For creating a new source
       body: 
@@ -85,7 +90,7 @@ types:
             body: 
               application/json:
                 example: |
-                  {"status": "Site not found"}
+                  {"status": "No matching source found"}
       delete:
         description: Used to remove a site from the database
         body: 
