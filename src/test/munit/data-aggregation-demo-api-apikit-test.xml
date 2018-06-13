@@ -9,13 +9,30 @@ http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/jav
     </http:request-config>
     
 	<java:config name="Java_Config" doc:name="Java Config" doc:id="61409e1f-1d59-4b3d-94ce-4dec68fcb41b" />
-	<munit:test name="put:\admin\sources:application\json:data-aggregation-demo-api-config-200-application\json-FlowTest" description="Verifying functionality of [put:\admin\sources:application\json:data-aggregation-demo-api-config-200-application\json]" ignore="true">
+	
+	<munit:test name="test-putsource-200" description="Verifying functionality of PUT /admin/sources for happy path">
         <munit:enable-flow-sources>
             <munit:enable-flow-source value="data-aggregation-demo-api-main" />
             <munit:enable-flow-source value="put:\admin\sources:application\json:data-aggregation-demo-api-config" />
         </munit:enable-flow-sources>
         <munit:behavior>
             <set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/put_admin_sources_application_json.json')]" />
+			<munit-tools:mock-when doc:name="Mock Check For Existing Sources with Same Name" doc:id="a4411163-3014-4a93-a734-b1acca4f8cbe" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:name" whereValue="Look for Sources With Same Name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[[]]" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock DB Request for Max ID" doc:id="511237c1-6b5f-4480-b2ab-799005777196" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:name" whereValue="Get Max Existing ID" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[[[2]]]" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
             <http:request config-ref="HTTP_Request_Configuration" method="PUT" path="/admin/sources">
@@ -28,47 +45,39 @@ http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/jav
         </munit:validation>
     </munit:test>
     
-    <munit:test name="put:\admin\sources:application\json:data-aggregation-demo-api-config-400-application\json-FlowTest" description="Verifying functionality of [put:\admin\sources:application\json:data-aggregation-demo-api-config-400-application\json]" ignore="true">
+    <munit:test name="test-putsource-400-duplicatename" description="Verifying functionality of PUT /admin/sources when a duplicate name already exists">
         <munit:enable-flow-sources>
             <munit:enable-flow-source value="data-aggregation-demo-api-main" />
             <munit:enable-flow-source value="put:\admin\sources:application\json:data-aggregation-demo-api-config" />
         </munit:enable-flow-sources>
         <munit:behavior>
             <set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/put_admin_sources_application_json.json')]" />
+			<java:new doc:name="Create Helper Class" class="com.deloitte.helperclasses.JsonHelpers" constructor="JsonHelpers()" target="helperClass"/>
+			<munit-tools:mock-when doc:name="Mock Check For Existing Sources with Same Name" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:name" whereValue="Look for Sources With Same Name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[Java::invoke('com.deloitte.helperclasses.JsonHelpers', 'getArrayFromJson(String)', vars.helperClass, {arg0: MunitTools::getResourceAsString('scaffolder/mock/get-single-source.json')})]" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
             <http:request config-ref="HTTP_Request_Configuration" method="PUT" path="/admin/sources">
-                <http:headers>#[{"Accept":"application/json","Content-Type":"application/json"}]</http:headers>
-                <http:response-validator>
-                    <http:success-status-code-validator values="400" />
-                </http:response-validator>
+                <http:headers><![CDATA[#[output applicaton/java
+---
+{
+	"Accept" : "application/json",
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+				<http:response-validator >
+					<http:success-status-code-validator values="200,400" />
+				</http:response-validator>
             </http:request>
         </munit:execution>
         <munit:validation>
             <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(400)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 400" />
             <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/put_400_admin_sources_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
-        </munit:validation>
-    </munit:test>
-    
-    <munit:test name="put:\admin\sources:application\json:data-aggregation-demo-api-config-500-application\json-FlowTest" description="Verifying functionality of [put:\admin\sources:application\json:data-aggregation-demo-api-config-500-application\json]" ignore="true">
-        <munit:enable-flow-sources>
-            <munit:enable-flow-source value="data-aggregation-demo-api-main" />
-            <munit:enable-flow-source value="put:\admin\sources:application\json:data-aggregation-demo-api-config" />
-        </munit:enable-flow-sources>
-        <munit:behavior>
-            <set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/put_admin_sources_application_json.json')]" />
-        </munit:behavior>
-        <munit:execution>
-            <http:request config-ref="HTTP_Request_Configuration" method="PUT" path="/admin/sources">
-                <http:headers>#[{"Accept":"application/json","Content-Type":"application/json"}]</http:headers>
-                <http:response-validator>
-                    <http:success-status-code-validator values="500" />
-                </http:response-validator>
-            </http:request>
-        </munit:execution>
-        <munit:validation>
-            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(500)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 500" />
-            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/put_500_admin_sources_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
         </munit:validation>
     </munit:test>
     

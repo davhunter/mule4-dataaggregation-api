@@ -79,6 +79,19 @@ output application/json
                     </ee:variables>
                 </ee:transform>
             </on-error-propagate>
+            <on-error-propagate type="APP:DUPLICATE_NAME">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="df7b806e-9903-4a6a-8678-4f4ddcdc9118">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{status: "Insert failed; name already exists"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
             <on-error-propagate type="APP:NO_SOURCE_TO_DELETE">
                 <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="df7b806e-9903-4a6a-8678-4f4ddcdc9118">
                     <ee:message>
@@ -202,22 +215,47 @@ output application/json
     </flow>
     
     <flow name="put:\admin\sources:application\json:data-aggregation-demo-api-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform doc:name="Save Incoming Data" doc:id="a01cc32e-5451-4467-a34a-0df5d281588b" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="incomingPayload" ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:select doc:name="Look for Sources With Same Name" config-ref="derbyConfig">
+			<db:sql>SELECT id, name, url FROM sources WHERE name = :name</db:sql>
+			<db:input-parameters><![CDATA[#[{'name': vars.incomingPayload.name}]]]></db:input-parameters>
+		</db:select>
+		<logger level="INFO" doc:name="DEBUG: log payload " doc:id="6dcb67ab-57ea-4063-b052-726b3a98ece2" message="payload after select on name: #[payload]"/>
+		<validation:is-empty-collection doc:name="Validate That None Exist" doc:id="1f225d01-3909-4b31-863c-6290933e7898" message="Name already exists in DB">
+			<error-mapping sourceType="VALIDATION:NOT_EMPTY_COLLECTION" targetType="APP:DUPLICATE_NAME" />
+		</validation:is-empty-collection>
+		<db:select doc:name="Get Max Existing ID" doc:id="0d5a2cc8-7c5e-489f-a0e7-6e70b774e88a" config-ref="derbyConfig">
+			<db:sql >SELECT MAX(id) FROM sources</db:sql>
+		</db:select>
+		<set-variable value="#[payload[0][0] as Number + 1]" doc:name="Save New Max ID" doc:id="107d343a-a7e8-4694-8db1-a59f98b8b0ef" variableName="maxID"/>
+		<db:insert doc:name="Save Data to DB" doc:id="02ec886c-76a8-4bc7-92d2-88e94059a8bb" config-ref="derbyConfig">
+			<db:sql >INSERT INTO sources (id, name, url) VALUES (:id, :name, :url)</db:sql>
+			<db:input-parameters ><![CDATA[#[{id: vars.maxID, name: vars.incomingPayload.name, url: vars.incomingPayload.url}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="c3da830c-ae33-4f8e-b0b5-481ac55e38d0">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-  name: "Site Name",
-  url: "http://www.somesite.com",
-  id: 1
+	id: vars.maxID,
+	name: vars.incomingPayload.name,
+	url: vars.incomingPayload.url
 }]]></ee:set-payload>
             </ee:message>
         </ee:transform>
     </flow>
     
     <flow name="delete:\admin\sources\(id):application\json:data-aggregation-demo-api-config">
-        <logger level="INFO" doc:name="DEBUG Logger" doc:id="f3187b1a-392b-456f-9a44-21c98102c6bf" message="Initial Payload: #[payload]"/>
 		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="bd94cff8-c591-447a-915d-2b83b1c40754" doc:name="Capture Incoming Data">
             <ee:variables>
                 <ee:set-variable variableName="id"><![CDATA[attributes.uriParams.id]]></ee:set-variable>
@@ -231,7 +269,6 @@ payload]]></ee:set-variable>
 			<error-mapping sourceType="VALIDATION:INVALID_BOOLEAN" targetType="APP:IDS_DONT_MATCH" />
 		</validation:is-true>
 		<flow-ref doc:name="get-source-fromdb-by-id" doc:id="a833003b-4271-4ea2-b6ec-c6ef71f663cc" name="get-source-fromdb-by-id"/>
-        <logger level="INFO" doc:name="DEBUG Logger" message="Payload after db select: #[payload]"/>
 		<validation:is-not-empty-collection doc:name="Validate Existing Source Exists" doc:id="b911894b-b521-494c-8156-d21303aee3dd" message="Source doesn't exist">
 			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:NO_SOURCE_TO_DELETE" />
 		</validation:is-not-empty-collection>
