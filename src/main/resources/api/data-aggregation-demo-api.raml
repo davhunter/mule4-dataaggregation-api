@@ -109,6 +109,11 @@ types:
               application/json:
                 example: |
                   {"status": "Deletion failed"}
+          400:
+            body: 
+              application/json:
+                example: |
+                  {"status": "Invalid format" }
 
   /cleanDB:
     description: For setting up the environment (for demo purposes)
