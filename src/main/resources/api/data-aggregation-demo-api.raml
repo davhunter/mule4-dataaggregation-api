@@ -5,32 +5,36 @@ baseUri: http://localhost:8081/da-api/
 
 documentation: 
   - title: Data Aggregation
-    content: This API demonstrates calling a number of external systems, doing a search in each, and amalgamating the results in a single response.
+    content: This API demonstrates calling a number of external systems, doing a search in each, and amalgamating the results in a single response. Results can be filtered, if desired, to return either detailed or trimmed-down views.
   - title: Admin
-    content: The Admin API is used for setting up the Sites used by the main API. The Sites are simply a list of URLs by which the search should be performed; all URLs must include a final component for a URL parameter for the search term. For example, if a Site in the Admin API's DB has the URL `http://www.somesite.com` stored for it, then searches will be performed using `GET http://www.somesite.com/searchTerm` from the Data Aggregation API.
+    content: The Admin API is used for setting up the **Sources** used by the Data Aggregation API. The Sources are simply a list of URLs by which the search should be performed. All URLs must include a final component for a URI parameter for the search term. For example, if a Source in the Admin API's DB has the URL `http://www.somesource.com` stored for it, then searches will be performed using `GET http://www.somesource.com/searchTerm` from the Data Aggregation API.
 
 types: 
   Result: !include exchange_modules/69d7f319-0d94-4bcb-b6e9-d6d5e28b1545/data-aggregation-demo-data-types/1.0.1/Result.raml
 
-  Site:
+  Source:
+    description: Contains details about a **Source** used by the Data Aggregation API. Depending on usage, the `id` may or may not be included; when submitting a new Source to the system, for example, an `id` isn't passed, since the Admin API will create it, but the response will include it, so the caller has a record of it.
     type: object
     properties: 
       name:
-        description: Friendly name of the site
+        displayName: Name
+        description: Friendly name of the source. Must be unique.
         type: string
         required: true
       url:
-        description: URL for the site. It is assumed that the site includes a final `/searchTerm` component at the end, used for searching. For example, if the URL `http://www.somesite.com` is passed, then searches will be performed using `GET http://www.somesite.com/searchTerm` by APIs calling this one.
+        displayName: URL
+        description: URL for the source. It is assumed that the source includes a final `/searchTerm` component at the end, used for searching. For example, if the URL `http://www.somesource.com` is passed, then searches will be performed using `GET http://www.somesource.com/searchTerm` by APIs calling this one.
         type: string
         required: true
       id:
-        description: The unique ID for this Site, used internally by the **Data Aggregation** API. 
+        displayName: ID
+        description: The unique ID for this source, used internally (and assigned) by the **Data Aggregation** API. 
         type: integer
         required: false
     additionalProperties: false
   
 /admin:
-  description: This API is used for administration of the Data Aggregation API, which consists of the list of sites that are used as sources
+  description: This API is used for administration of the Data Aggregation API, which consists of the list of sources for data
   /sources:
     description: For working with lists of sources, or creating new sources
     get:
@@ -40,10 +44,11 @@ types:
           body: 
             application/json:
               type: array
-              items: Site
+              items: Source
               example: |
-                [{"name": "Twitter", "url": "http:www.url.com/twitter-api/"}]
+                [{"id": 1, "name": "Twitter", "url": "http:www.url.com/twitter-api/"},{"id": 2, "name": "Google", "url": "http://www.google.com"}]
         404:
+          description: Returned if there are no Sources in the database
           body: 
             application/json:
               example: |
@@ -52,17 +57,17 @@ types:
       description: For creating a new source
       body: 
         application/json:
-          type: Site
+          type: Source
           example: |
-            { "name": "Site Name", "url": "http://www.somesite.com" }
+            { "name": "Source Name", "url": "http://www.somesource.com" }
       responses: 
-        200:
-          description: A copy of the `Site` object is returned if insertion is successful, including that site's newly created ID
+        201:
+          description: A copy of the `Source` object is returned if insertion is successful, including that source's newly created `id`
           body: 
             application/json:
-              type: Site
+              type: Source
               example: |
-                { "name": "Site Name", "url": "http://www.somesite.com", "id": 1 }
+                { "name": "Source Name", "url": "http://www.somesource.com", "id": 1 }
         400:
           description: Returned if the source passed into the API is invalid, or the JSON passed is incorrectly formatted
           body: 
@@ -74,42 +79,46 @@ types:
           body: 
             application/json:
               example: |
-                {"status": "Error creating site"}
+                {"status": "Error creating source"}
     /{id}:
-      description: Used for working with a particular Site from the API, based on `ID`
+      description: Used for working with a particular Source from the API, based on `id`
       get:
-        description: Returns a particular Site
+        description: Retrieves a particular Source
         responses: 
           200:
             body: 
               application/json:
-                type: Site
+                type: Source
                 example: |
                   {"name": "Twitter", "url": "http://www.url.com/twitter-api", "id": 1}
           404:
+            description: Returned if no Source exists with that `id`
             body: 
               application/json:
                 example: |
                   {"status": "No matching source found"}
       delete:
-        description: Used to remove a site from the database
+        description: Used to remove a Source from the database
         body: 
           application/json:
-            type: Site
+            type: Source
             example: |
-              { "name": "Some Site", "url": "http://www.somesite.com", "id": 1 }
+              { "name": "Some Source", "url": "http://www.somesource.com", "id": 1 }
         responses: 
           200:
+            description: Returned if the insertion is successfull
             body: 
               application/json:
                 example: |
                   {"status": "success"}
           500:
+            description: Returned if there is a technical error attempting to perform the delete
             body: 
               application/json:
                 example: |
                   {"status": "Deletion failed"}
           400:
+            description: Returned if invalid data is passed to the API, which could be be due to 1) improperly formatted JSON; 2) the `id` in the URI and the `id` in the data not matching; or 3) the data passed in the body not matching the data in the DB.
             body: 
               application/json:
                 example: |
@@ -118,7 +127,7 @@ types:
   /cleanDB:
     description: For setting up the environment (for demo purposes)
     get:
-      description: Very *dangerous* API to use. Removes all `Sites` from the databse, and replaces them with a default list, maintained in the application's properties. Would never be created in real life -- or at least not simply implemented with a `GET`
+      description: Very *dangerous* API to use. Removes all `Sources` from the databse, and replaces them with a default list, maintained in the application's properties. Would never be created in real life -- or at least not implemented with a simple `GET`!
       responses: 
         200:
           body: 

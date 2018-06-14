@@ -252,6 +252,9 @@ output application/json
 	url: vars.incomingPayload.url
 }]]></ee:set-payload>
             </ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="httpStatus" ><![CDATA[201]]></ee:set-variable>
+			</ee:variables>
         </ee:transform>
     </flow>
     

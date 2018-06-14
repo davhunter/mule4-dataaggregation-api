@@ -10,7 +10,7 @@ http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/jav
     
 	<java:config name="Java_Config" doc:name="Java Config" doc:id="61409e1f-1d59-4b3d-94ce-4dec68fcb41b" />
 	
-	<munit:test name="test-putsource-200" description="Verifying functionality of PUT /admin/sources for happy path">
+	<munit:test name="test-putsource-201" description="Verifying functionality of PUT /admin/sources for happy path">
         <munit:enable-flow-sources>
             <munit:enable-flow-source value="data-aggregation-demo-api-main" />
             <munit:enable-flow-source value="put:\admin\sources:application\json:data-aggregation-demo-api-config" />
@@ -36,11 +36,19 @@ http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/jav
         </munit:behavior>
         <munit:execution>
             <http:request config-ref="HTTP_Request_Configuration" method="PUT" path="/admin/sources">
-                <http:headers>#[{"Accept":"application/json","Content-Type":"application/json"}]</http:headers>
+                <http:headers><![CDATA[#[output applicaton/java
+---
+{
+	"Accept" : "application/json",
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+				<http:response-validator >
+					<http:success-status-code-validator values="200,201" />
+				</http:response-validator>
             </http:request>
         </munit:execution>
         <munit:validation>
-            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(201)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 201" />
             <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/put_200_admin_sources_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
         </munit:validation>
     </munit:test>
