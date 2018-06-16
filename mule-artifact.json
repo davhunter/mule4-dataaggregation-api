@@ -11,10 +11,12 @@
     "id": "mule",
     "attributes": {
       "exportedResources": [
+        "api/.gitignore",
         "api/data-aggregation-demo-api.raml",
         "api/exchange_modules/69d7f319-0d94-4bcb-b6e9-d6d5e28b1545/data-aggregation-demo-data-types/1.0.1/DetailedResult.raml",
         "api/exchange_modules/69d7f319-0d94-4bcb-b6e9-d6d5e28b1545/data-aggregation-demo-data-types/1.0.1/Result.raml",
         "api/exchange_modules/69d7f319-0d94-4bcb-b6e9-d6d5e28b1545/data-aggregation-demo-data-types/1.0.1/SimpleResult.raml",
+        "api/samples/sample-response.json",
         "beans.xml"
       ],
       "exportedPackages": [

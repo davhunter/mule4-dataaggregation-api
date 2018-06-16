@@ -1,0 +1,34 @@
+{
+  "searchTerm": "McDonalds",
+  "detailedResults": [
+    {
+      "id": "idData",
+      "source": "source system",
+      "text": "text from source system",
+      "title": "Title From Source System",
+      "url": "http://www.sourcesystem.com/url/to/item/idData",
+      "user": "source.user",
+      "datePublished": "2018-05-03T09:58:32.52Z",
+      "categories": [
+        "category",
+        "another category"
+      ],
+      "department": "source system department",
+      "hashtags": [
+        "hashtag",
+        "another-hash"
+      ]
+    }
+  ],
+  "simpleResults": [
+    {
+      "id": "idData",
+      "source": "source system",
+      "text": "text from source system",
+      "categories": [
+        "category",
+        "another category"
+      ]
+    }
+  ]
+}

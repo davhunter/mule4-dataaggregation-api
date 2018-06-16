@@ -46,8 +46,9 @@ public class SourceDatabase implements InitializingBean {
 				stmt.executeUpdate("CREATE TABLE sources (\n" + "    id INTEGER PRIMARY KEY,\n"
 						+ "    name VARCHAR(500),\n" + "    url VARCHAR(2000)\n" + ")");
 				stmt.executeUpdate(
-						"INSERT INTO sources (id, name, url) VALUES (1, 'Twitter', 'https://www.twitter.com')");
-				stmt.executeUpdate("INSERT INTO sources (id, name, url) VALUES (2, 'Google','https://www.google.ca')");
+						"INSERT INTO sources (id, name, url) VALUES (1, 'Healthy Canada','http://mule4-hc-api.ca-c1.cloudhub.io/hc/recalls/')");
+				stmt.executeUpdate(
+						"INSERT INTO sources (id, name, url) VALUES (2, 'NYT API', 'http://mule4-nyt-api.ca-c1.cloudhub.io/nyt/articles/')");
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

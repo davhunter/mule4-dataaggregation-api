@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:data-aggregation-demo-api="http://www.mulesoft.org/schema/mule/data-aggregation-demo-api" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
 	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" 
-	xmlns:http="http://www.mulesoft.org/schema/mule/http"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:spring="http://www.mulesoft.org/schema/mule/spring" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" 
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:spring="http://www.mulesoft.org/schema/mule/spring" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
 http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
-http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/data-aggregation-demo-api http://www.mulesoft.org/schema/mule/data-aggregation-demo-api/current/mule-data-aggregation-demo-api.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
 
 	<http:listener-config name="data-aggregation-demo-api-httpListenerConfig">
 		<http:listener-connection host="${http.host}"
@@ -29,7 +31,6 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
 	</db:config>
 	
 	<spring:config name="springConfig" doc:name="Spring Config" doc:id="ce8af09a-d4d4-4d7e-a8a4-5787760e2be8" files="beans.xml" />
-	
 	<flow name="data-aggregation-demo-api-main">
         <http:listener config-ref="data-aggregation-demo-api-httpListenerConfig" path="/da-api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -385,27 +386,69 @@ output application/json
 	</sub-flow>
 	
 	<flow name="get:\results\(searchTerm):data-aggregation-demo-api-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="a79b8370-fe81-46c8-8ea6-8d7a797340f3">
             <ee:variables>
-                <ee:set-variable variableName="searchTerm">attributes.uriParams.searchTerm</ee:set-variable>
+                <ee:set-variable variableName="searchTerm"><![CDATA[attributes.uriParams.searchTerm]]></ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="
-http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+		<flow-ref doc:name="get:\admin\sources:data-aggregation-demo-api-config" doc:id="3ea31f8f-4011-459a-b0ed-c5f20f4b2b25" name="get:\admin\sources:data-aggregation-demo-api-config" doc:description="Would have preferred to call the API, but couldn't initially get it working"/>
+		<ee:transform doc:name="Create Empty Result" doc:id="b884ed9d-3744-4dfd-a010-9f29b52f9f12" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="fullResponse" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	searchTerm: vars.searchTerm,
+	detailedResults: [],
+	simpleResults: []
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each Source" doc:id="1d3842fd-5fb4-4a1c-ad65-982757fb3153" collection="#[payload]">
+			<ee:transform doc:name="Build Full URL" doc:id="f99f71d8-a5e5-4d3e-a1c3-2c7a8c1d62ad">
+					<ee:message>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="fullURL"><![CDATA[%dw 2.0
+output text/plain
+---
+// TODO: figure out if the string has a / at the end or not
+payload.url as String ++ vars.searchTerm as String]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			<http:request method="GET" doc:name="Get Result from Source API" doc:id="a2f40d7c-dc24-40fd-91c1-d669669f7deb" url="#[vars.fullURL]">
+				<http:response-validator >
+					<http:success-status-code-validator values="200,404" />
+				</http:response-validator>
+			</http:request>
+			<choice doc:name="When Result not 404" doc:id="e7f06c57-27a2-4758-b746-d41e6331bc17" >
+				<when expression="#[attributes.statusCode == 200]" >
+					<ee:transform doc:name="Add Response to Full Result" doc:id="38881596-c0f5-4fa4-a6c9-b26a13287066">
+				<ee:message>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="fullResponse"><![CDATA[%dw 2.0
+output application/java
+---
+{
+	searchTerm: vars.fullResponse.searchTerm,
+	detailedResults: vars.fullResponse.detailedResults as Array ++ payload.detailedResults as Array,
+	simpleResults: vars.fullResponse.simpleResults as Array ++ payload.simpleResults as Array
+}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+				</when>
+			</choice>
+		</foreach>
+		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="03cf98aa-dd13-4898-b15c-3e94f2ef41f9" doc:name="Send fullResponse var as Result">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
-{
-  searchTerm: "search term",
-  simpleResults: [
-    {
-      id: "1",
-      source: "twitter",
-      text: "search term"
-    }
-  ]
-}]]></ee:set-payload>
+vars.fullResponse]]></ee:set-payload>
             </ee:message>
         </ee:transform>
     </flow>
