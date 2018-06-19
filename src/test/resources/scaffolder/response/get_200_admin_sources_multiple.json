@@ -2,11 +2,11 @@
   {
     "id": 1,
     "name": "Source 1",
-    "url": "http://source1.com"
+    "url": "http://source1.com/"
   },
   {
     "id": 2,
     "name": "Source 2",
-    "url": "http://source2.com"
+    "url": "http://source2.com/"
   }
 ]
