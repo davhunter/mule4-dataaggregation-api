@@ -414,8 +414,10 @@ output application/java
 						<ee:set-variable variableName="fullURL"><![CDATA[%dw 2.0
 output text/plain
 ---
-// TODO: figure out if the string has a / at the end or not
-payload.url as String ++ vars.searchTerm as String]]></ee:set-variable>
+if (payload.url as String matches /.*\/$/)
+  payload.url as String ++ vars.searchTerm as String
+else
+  payload.url as String ++ "/" ++ vars.searchTerm as String]]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			<http:request method="GET" doc:name="Get Result from Source API" doc:id="a2f40d7c-dc24-40fd-91c1-d669669f7deb" url="#[vars.fullURL]">
