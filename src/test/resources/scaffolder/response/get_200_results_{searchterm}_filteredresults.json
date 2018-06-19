@@ -1,0 +1,23 @@
+{
+  "searchTerm": "searchTerm",
+  "simpleResults": [
+    {
+      "id": "idData",
+      "source": "source system",
+      "text": "text from source system",
+      "categories": [
+        "category",
+        "another category"
+      ]
+    },
+    {
+      "id": "idData",
+      "source": "source system",
+      "text": "text from source system",
+      "categories": [
+        "category",
+        "another category"
+      ]
+    }
+  ]
+}

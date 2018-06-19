@@ -31,6 +31,7 @@ http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/cu
 	</db:config>
 	
 	<spring:config name="springConfig" doc:name="Spring Config" doc:id="ce8af09a-d4d4-4d7e-a8a4-5787760e2be8" files="beans.xml" />
+	
 	<flow name="data-aggregation-demo-api-main">
         <http:listener config-ref="data-aggregation-demo-api-httpListenerConfig" path="/da-api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -129,6 +130,19 @@ output application/json
                     </ee:message>
                     <ee:variables>
                         <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APP:INVALID_SOURCES">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="d22a1e15-3f50-4c6b-b0a6-f0330b9d7df0">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Invalid result from DB for sources"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[500]]></ee:set-variable>
                     </ee:variables>
                 </ee:transform>
             </on-error-propagate>
@@ -334,9 +348,7 @@ output application/json
     </flow>
     
     <flow name="get:\admin\sources:data-aggregation-demo-api-config">
-        <db:select doc:name="Get Sources" doc:id="02f5d9f2-f3a3-4e29-90fe-fb04ff41dea7" config-ref="derbyConfig">
-			<db:sql >SELECT id, name, url FROM sources</db:sql>
-		</db:select>
+		<flow-ref doc:name="Flow Reference" doc:id="f3e47efe-420c-4f32-a912-a50efacf4d59" name="get-sources-from-db" />
 		<validation:is-not-empty-collection doc:name="Validate that a Record Exists" doc:id="4dfade93-ec46-46aa-bc99-90fd6ab708b4" >
 			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:NO_SOURCE_FOUND" />
 		</validation:is-not-empty-collection>
@@ -354,6 +366,12 @@ payload map ( result , indexOfResult) -> {
         </ee:transform>
     </flow>
     
+	<sub-flow name="get-sources-from-db" doc:id="1f49075b-ff79-4e06-87b8-cebd0375fa7a" >
+		<db:select doc:name="Get Sources" doc:id="02f5d9f2-f3a3-4e29-90fe-fb04ff41dea7" config-ref="derbyConfig">
+			<db:sql>SELECT id, name, url FROM sources</db:sql>
+		</db:select>
+	</sub-flow>
+	
     <flow name="get:\admin\sources\(id):data-aggregation-demo-api-config">
 		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="ed803643-ebc2-4e55-9dd1-adc1a23e90f7">
             <ee:variables>
@@ -386,12 +404,12 @@ output application/json
 	</sub-flow>
 	
 	<flow name="get:\results\(searchTerm):data-aggregation-demo-api-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="a79b8370-fe81-46c8-8ea6-8d7a797340f3">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="a79b8370-fe81-46c8-8ea6-8d7a797340f3" doc:name="Capture Inputs">
             <ee:variables>
                 <ee:set-variable variableName="searchTerm"><![CDATA[attributes.uriParams.searchTerm]]></ee:set-variable>
+				<ee:set-variable variableName="detailedResults" ><![CDATA[attributes.queryParams.detailedResponse]]></ee:set-variable>
             </ee:variables>
         </ee:transform>
-		<flow-ref doc:name="get:\admin\sources:data-aggregation-demo-api-config" doc:id="3ea31f8f-4011-459a-b0ed-c5f20f4b2b25" name="get:\admin\sources:data-aggregation-demo-api-config" doc:description="Would have preferred to call the API, but couldn't initially get it working"/>
 		<ee:transform doc:name="Create Empty Result" doc:id="b884ed9d-3744-4dfd-a010-9f29b52f9f12" >
 			<ee:message >
 			</ee:message>
@@ -406,6 +424,10 @@ output application/java
 }]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
+		<flow-ref doc:name="get-sources-from-db" doc:id="ddce25dc-0e59-4009-b27a-9a05804e283a" name="get-sources-from-db"/>
+		<validation:is-not-empty-collection doc:name="Validate Sources Returned" doc:id="6a8c4622-e7a9-4310-934b-6681adc51f54" message="Invalid sources returned from admin API">
+			<error-mapping targetType="APP:INVALID_SOURCES" />
+		</validation:is-not-empty-collection>
 		<foreach doc:name="For Each Source" doc:id="1d3842fd-5fb4-4a1c-ad65-982757fb3153" collection="#[payload]">
 			<ee:transform doc:name="Build Full URL" doc:id="f99f71d8-a5e5-4d3e-a1c3-2c7a8c1d62ad">
 					<ee:message>
@@ -444,7 +466,19 @@ output application/java
 				</when>
 			</choice>
 		</foreach>
-		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="
+		<choice doc:name="If Filtered Results" doc:id="d85c1d6c-bb8d-4b61-87fe-947ce4cc6a55" >
+			<when expression='#[vars.detailedResults == "false"]'>
+				<ee:transform doc:name="Send fullResponse var as Result without Detailed" doc:id="bf238a55-9923-413c-86f7-c0b034bc794d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.fullResponse - "detailedResults"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="03cf98aa-dd13-4898-b15c-3e94f2ef41f9" doc:name="Send fullResponse var as Result">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -453,5 +487,7 @@ output application/json
 vars.fullResponse]]></ee:set-payload>
             </ee:message>
         </ee:transform>
+			</otherwise>
+		</choice>
     </flow>
 </mule>
