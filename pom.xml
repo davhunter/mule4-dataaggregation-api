@@ -4,7 +4,7 @@
 
 	<groupId>com.deloitte</groupId>
 	<artifactId>mule4-da-api</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>mule-application</packaging>
 
 	<name>mule4-da-api</name>
@@ -19,6 +19,10 @@
 		<spring.version>4.1.9.RELEASE</spring.version>
 		<springsecurity.version>4.0.4.RELEASE</springsecurity.version>
 		<jackson.version>2.9.6</jackson.version>
+		
+		<deployment.uri>https://anypoint.mulesoft.com</deployment.uri>
+		<deployment.region>ca-central-1</deployment.region>
+		<deployment.environment>Sandbox</deployment.environment>
 	</properties>
 
 	<build>
@@ -55,6 +59,17 @@
 							<artifactId>mule-java-module</artifactId>
 						</sharedLibrary>
 					</sharedLibraries>
+					<cloudHubDeployment>
+						<uri>${deployment.uri}</uri>
+						<muleVersion>${app.runtime}</muleVersion>
+						<!-- username and password must be passed in from outside -->
+						<username>${username}</username>
+						<password>${password}</password>
+						<applicationName>${project.artifactId}</applicationName>
+						<environment>${deployment.environment}</environment>
+						<region>${deployment.region}</region>
+						<workerType>Micro</workerType>
+					</cloudHubDeployment>
 				</configuration>
 			</plugin>
 			<plugin>
