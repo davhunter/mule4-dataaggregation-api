@@ -1,6 +1,7 @@
 {
   "configs": [
-    "data-aggregation-demo-api.xml"
+    "data-aggregation-demo-api.xml",
+    "admin_flows.xml"
   ],
   "secureProperties": [],
   "redeploymentEnabled": true,

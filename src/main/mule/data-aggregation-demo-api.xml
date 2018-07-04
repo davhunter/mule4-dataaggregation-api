@@ -366,12 +366,6 @@ payload map ( result , indexOfResult) -> {
         </ee:transform>
     </flow>
     
-	<sub-flow name="get-sources-from-db" doc:id="1f49075b-ff79-4e06-87b8-cebd0375fa7a" >
-		<db:select doc:name="Get Sources" doc:id="02f5d9f2-f3a3-4e29-90fe-fb04ff41dea7" config-ref="derbyConfig">
-			<db:sql>SELECT id, name, url FROM sources</db:sql>
-		</db:select>
-	</sub-flow>
-	
     <flow name="get:\admin\sources\(id):data-aggregation-demo-api-config">
 		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="ed803643-ebc2-4e55-9dd1-adc1a23e90f7">
             <ee:variables>
@@ -396,13 +390,6 @@ output application/json
         </ee:transform>
     </flow>
     
-	<sub-flow name="get-source-fromdb-by-id" doc:id="72782d8e-8690-433f-a18a-e3adee5da4bc" >
-		<db:select doc:name="Get Selected Source from DB" doc:id="a6f414a5-1d31-43cb-9446-9d15b8d49b81" config-ref="derbyConfig">
-			<db:sql>SELECT id, name, url FROM sources WHERE id = :id</db:sql>
-			<db:input-parameters><![CDATA[#[{'id': vars.id}]]]></db:input-parameters>
-		</db:select>
-	</sub-flow>
-	
 	<flow name="get:\results\(searchTerm):data-aggregation-demo-api-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="a79b8370-fe81-46c8-8ea6-8d7a797340f3" doc:name="Capture Inputs">
             <ee:variables>
