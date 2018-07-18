@@ -7,4 +7,4 @@ http:
 # with real values for deployment to CloudHub
 api:
   id: "1"
-  mainFlow: "HACK-fake-flow"
+  mainFlow: "data-aggregation-demo-api-main-superflow"

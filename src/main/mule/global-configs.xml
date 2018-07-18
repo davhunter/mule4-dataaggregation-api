@@ -272,8 +272,8 @@ output application/json
 		</error-handler>
 	</flow>
 
-	<flow name="HACK-fake-flow" doc:id="122f0b6d-ebb0-4961-8cf0-496dc7646d39" doc:description="This is a hack; the flow is not actually used, but trying to fake API Autodiscovery for embedded runtime scenarios">
-		<logger level="ERROR" doc:name="Logger" doc:id="52646d36-7607-49f1-984c-56e09edb67d0" message="THIS MESSAGE SHOULD NEVER APPEAR"/>
+	<flow name="data-aggregation-demo-api-main-superflow" doc:id="122f0b6d-ebb0-4961-8cf0-496dc7646d39" doc:description="This is a hack; the flow is not actually used, but trying to fake API Autodiscovery for embedded runtime scenarios">
+		<flow-ref doc:name="data-aggregation-demo-api-main" doc:id="0abc9d05-e076-4ed0-ab1a-2bf4316f8c9d" name="data-aggregation-demo-api-main"/>
 	</flow>
 
 </mule>
