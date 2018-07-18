@@ -1,3 +1,10 @@
 http:
   port: "8084"
   host: "0.0.0.0"
+
+# HACK: the following properties are used by the API Autodiscovery component, 
+# and have to be given fake values for the embedded runtime - but overridden 
+# with real values for deployment to CloudHub
+api:
+  id: "1"
+  mainFlow: "HACK-fake-flow"

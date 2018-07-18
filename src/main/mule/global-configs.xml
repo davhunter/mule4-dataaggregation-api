@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
-	xmlns:http="http://www.mulesoft.org/schema/mule/http"
-	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:spring="http://www.mulesoft.org/schema/mule/spring"
-	xsi:schemaLocation="
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:data-aggregation-demo-api="http://www.mulesoft.org/schema/mule/data-aggregation-demo-api"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:spring="http://www.mulesoft.org/schema/mule/spring"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
 http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd
-http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
-http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
-http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
-http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/data-aggregation-demo-api http://www.mulesoft.org/schema/mule/data-aggregation-demo-api/current/mule-data-aggregation-demo-api.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
 
 	<http:listener-config name="data-aggregation-demo-api-httpListenerConfig">
 		<http:listener-connection host="${http.host}"
@@ -34,9 +39,9 @@ http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/m
 	<spring:config name="springConfig" doc:name="Spring Config"
 		doc:id="ce8af09a-d4d4-4d7e-a8a4-5787760e2be8" files="beans.xml" />
 
-	<api-gateway:autodiscovery apiId="15483724"
-		doc:name="API Autodiscovery" doc:id="82428e03-d2e5-42cb-8444-8fe2394507da"
-		flowRef="data-aggregation-demo-api-main" />
+	<api-gateway:autodiscovery apiId="${api.id}"
+		doc:name="API Autodiscovery" doc:id="372921d9-274e-4265-b84f-572e6f506b99"
+		flowRef="${api.mainFlow}" />
 
 	<flow name="data-aggregation-demo-api-main">
 		<http:listener config-ref="data-aggregation-demo-api-httpListenerConfig"
@@ -248,6 +253,8 @@ output application/json
 			<on-error-propagate type="APIKIT:NOT_FOUND">
 				<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
 					xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd 
 http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 					<ee:message>
@@ -264,4 +271,9 @@ output application/json
 			</on-error-propagate>
 		</error-handler>
 	</flow>
+
+	<flow name="HACK-fake-flow" doc:id="122f0b6d-ebb0-4961-8cf0-496dc7646d39" doc:description="This is a hack; the flow is not actually used, but trying to fake API Autodiscovery for embedded runtime scenarios">
+		<logger level="ERROR" doc:name="Logger" doc:id="52646d36-7607-49f1-984c-56e09edb67d0" message="THIS MESSAGE SHOULD NEVER APPEAR"/>
+	</flow>
+
 </mule>

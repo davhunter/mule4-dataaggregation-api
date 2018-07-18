@@ -14,7 +14,6 @@ http://www.mulesoft.org/schema/mule/data-aggregation-demo-api http://www.mulesof
 http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
 http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
 
-
     <flow name="put:\admin\sources:application\json:data-aggregation-demo-api-config">
         <ee:transform doc:name="Save Incoming Data" doc:id="a01cc32e-5451-4467-a34a-0df5d281588b" >
 			<ee:message >
@@ -252,6 +251,9 @@ vars.fullResponse - "detailedResults"]]></ee:set-payload>
 			</when>
 			<otherwise >
 				<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd 
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="03cf98aa-dd13-4898-b15c-3e94f2ef41f9" doc:name="Send fullResponse var as Result">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -263,4 +265,5 @@ vars.fullResponse]]></ee:set-payload>
 			</otherwise>
 		</choice>
     </flow>
+    
 </mule>
