@@ -72,7 +72,7 @@
 						<properties>
 							<anypoint.platform.client_id>${ch-client-id}</anypoint.platform.client_id>
 							<anypoint.platform.client_secret>${ch-client-secret}</anypoint.platform.client_secret>
-							<app.id>${app.id}</app.id>
+							<api.id>${api.id}</api.id>
 						</properties>
 					</cloudHubDeployment>
 				</configuration>
