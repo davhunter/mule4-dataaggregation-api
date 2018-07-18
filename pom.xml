@@ -73,6 +73,7 @@
 							<anypoint.platform.client_id>${ch-client-id}</anypoint.platform.client_id>
 							<anypoint.platform.client_secret>${ch-client-secret}</anypoint.platform.client_secret>
 							<api.id>${api.id}</api.id>
+							<api.mainFlow>data-aggregation-demo-api-main</api.mainFlow>
 						</properties>
 					</cloudHubDeployment>
 				</configuration>
