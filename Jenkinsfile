@@ -5,7 +5,7 @@ pipeline {
 			environment {
 				ANYPOINT_CREDENTIALS = credentials("${ENV}.cloudhub.credentials")
 				CH_CLIENT_ID = credentials("${ENV}.cloudhub.client.id")
-				CH_CLIENT_SECRET = credentials(${ENV}.cloudhub.client.secret)
+				CH_CLIENT_SECRET = credentials("${ENV}.cloudhub.client.secret")
 				AUTODISC_APIID = credentials("${ENV}.daapi.audodisc")
 			}
 			steps {
