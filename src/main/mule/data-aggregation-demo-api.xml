@@ -245,7 +245,7 @@ output application/java
 						<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
-vars.fullResponse - "detailedResults"]]></ee:set-payload>
+vars.fullResponse]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
 			</when>
