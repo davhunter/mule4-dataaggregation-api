@@ -2,6 +2,18 @@
 
 Demo API that is responsible for aggregating data from a number of *other* APIs, and returning the full list of results. It's implemented in **Mule4** / **Studio7**.
 
+## Dependencies
+
+This project provides the code for a **Process API** that depends on one or more **System APIs** -- the Process API calls these System APIs, and then aggregates the results. (The list of System APIs to be used by the Process API is maintained in a Derby Database, which is adminstered via an Admin API, provided by this project.)
+
+Three such System APIs have been defined, and are used by this System API for demonstration purposes. They are defined by three separate projects, alongside this one:
+
+* `mule4-hc-api` gets data from the Health Canada API
+* `mule4-nyt-api` gets data from the New York Times API
+* `twitter-system-api` gets data from the Twitter API
+
+Overall instructions for running the demo are given here, in the `mule4-dataaggregation-api` project, but the other three projects are also required for successful execution.
+
 ## Features
 
 The following features are used in this project:
